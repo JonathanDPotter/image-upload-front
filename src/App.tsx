@@ -1,26 +1,59 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { FormEvent, useEffect, useState } from "react";
+import axios from "axios";
 
-function App() {
+const App = () => {
+  const [file, setFile] = useState<File | null>(null);
+  const [image, setImage] = useState("");
+
+  const handleChange = (event: FormEvent<HTMLInputElement>) => {
+    const { files } = event.currentTarget;
+    files && setFile(files[0]);
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (image) {
+      try {
+        const response = await axios.post("http://localhost:1337/image/", {
+          data: image,
+        });
+        console.log(response);
+      } catch (error: any) {
+        console.log(error);
+      }
+    } else {
+      return;
+    }
+  };
+
+  useEffect(() => {
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = () => {
+        if (reader.result) {
+          setImage(reader.result as string);
+        }
+      };
+    }
+  }, [file]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <h1>Image Uploader</h1>
+      <form action="submit" onSubmit={handleSubmit}>
+        <input
+          type="file"
+          name="file"
+          id="file"
+          onChange={handleChange}
+          accept="image/jpg, image/jpeg, image/png, image/gif"
+        />
+        <input type="submit" value="submit" />
+      </form>
+      {image && <img src={image} height="400px" alt="user submitted" />}
     </div>
   );
-}
+};
 
 export default App;
